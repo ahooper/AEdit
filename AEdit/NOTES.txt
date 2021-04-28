@@ -1,0 +1,76 @@
+
+Storyboard key points:
+    windowController storyboardIdentifier="Files Window Controller"  customClass="FilesWindowController"
+        presentation mode single
+    viewController customClass="FilesViewController"
+    view wantsLayer="YES"
+    textView allowsUndo="YES"
+    textView binding destination={TextViewController} name="value" keyPath="representedObject.content.contentString" options NSContinuouslyUpdatesValue
+    textView outlet property="delegate" destination={TextViewController}
+    Window - tabbing disabled
+    Application Menu - Close => Close Window, key shift clover W
+        add Close Tab, key clover W, action closeTab (TabsWindowController)
+    Preferences View - color well bindings use transformer for NSSecureCoding
+
+The files view has a tab view of open documents. Only the
+document in the selected tab has a window controller.
+
+The Classes That Support Document-Based Apps
+https://developer.apple.com/library/archive/documentation/DataManagement/Conceptual/DocBasedAppProgrammingGuideForOSX/KeyObjects/KeyObjects.html#//apple_ref/doc/uid/TP40011179-CH3-SW2
+
+Message Flow in the Document Architecture
+https://developer.apple.com/library/archive/documentation/DataManagement/Conceptual/DocBasedAppProgrammingGuideForOSX/AdvancedTopics/AdvancedTopics.html#//apple_ref/doc/uid/TP40011179-CH7-SW2
+
+Windows Are Restored Automatically
+https://developer.apple.com/library/archive/documentation/DataManagement/Conceptual/DocBasedAppProgrammingGuideForOSX/StandardBehaviors/StandardBehaviors.html#//apple_ref/doc/uid/TP40011179-CH5-SW8
+
+The (Event) Responder Chain
+https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/EventOverview/EventArchitecture/EventArchitecture.html#//apple_ref/doc/uid/10000060i-CH3-SW2
+The main window’s first responder and the successive responder objects up the view hierarchy
+The main window itself
+The window's NSWindowController object (which inherits from NSResponder)
+The main window’s delegate.
+The NSDocument object (if different from the main window’s delegate)
+The application object, NSApp
+The application object's delegate
+The application's document controller (an NSDocumentController object, which does not inherit from NSResponder)
+
+One NSWindow handling multiple NSDocument instances
+http://cutecoder.org/programming/window-multiple-documents/
+
+Cocoa Text System
+https://developer.apple.com/library/archive/documentation/StringsTextFonts/Conceptual/CoreText_Programming/Introduction/Introduction.html
+https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/TextLayout/TextLayout.html
+
+Syntax highlighting
+Use layout manager temporary attributes for performance on large files
+http://cocoadev.github.io/ImplementSyntaxHighlightingUsingTemporaryAttributes/
+https://www.noodlesoft.com/blog/2012/05/29/syntax-coloring-for-fun-and-profit/
+https://christiantietze.de/posts/2017/11/syntax-highlight-nstextstorage-insertion-point-change/
+
+Color
+     https://thoughtbot.com/blog/closer-look-color-lightness
+     http://alienryderflex.com/hsp.html
+     https://github.com/thisandagain/color
+     http://www.easyrgb.com/en/math.php
+     https://gist.github.com/ngquerol/23d6d5ebd051e18682badafa37e48442
+     https://github.com/bennyguitar/Colours
+https://indiestack.com/2018/10/dark-mode-series-introduction/
+
+Xcode ANTLR build rule
+java -cp /Users/andy/Software/ANTLR/antlr-4.9.1-complete.jar org.antlr.v4.Tool -no-listener -Dlanguage=Swift "${INPUT_FILE_PATH}"
+input_file_base=`dirname ${INPUT_FILE_PATH}`/`basename ${INPUT_FILE_PATH} .antlr4`
+cp ${input_file_base}.interp ${input_file_base}Lexer.interp ${DERIVED_FILE_DIR}
+
+https://indiestack.com/2014/12/speeding-up-custom-script-phases/
+https://pewpewthespells.com/blog/xcode_build_system.html
+https://xcodebuildsettings.com
+
+ash ~/Software/Xcode/AEdit$ xcodebuild -showBuildSettings
+
+ANTLR4
+https://github.com/antlr/antlr4/blob/4.9.1/doc/swift-target.md
+https://github.com/antlr/antlr4/blob/4.9.1/doc/wildcard.md
+
+TextMate language grammars
+https://macromates.com/manual/en/language_grammars

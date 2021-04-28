@@ -1,0 +1,239 @@
+// Excerpts from https://github.com/antlr/grammars-v4/blob/master/c/C.g4
+// antlr4 -no-listener -Dlanguage=Swift C.antlr4
+// expect warning(131): C/C.antlr4:73:75: greedy block ()* contains wildcard; the non-greedy syntax ()*? may be preferred
+
+grammar C;
+
+Identifier: IdentifierFirst (IdentifierFirst | Digit)* ;
+fragment IdentifierFirst: [a-zA-Z_] | UniversalCharacterName ;
+
+Literal
+    :   [1-9] Digit* IntegerSuffix?
+    |   '0' OctalDigit* IntegerSuffix?
+    |   '0' [bB] [0-1]+
+    |   Fraction Exponent? FloatingSuffix?
+    |   Digit+ Exponent FloatingSuffix?
+    |   HexadecimalPrefix HexadecimalDigit+ IntegerSuffix?
+    |   HexadecimalPrefix HexadecimalFraction BinaryExponent FloatingSuffix?
+    |   HexadecimalPrefix HexadecimalDigit+ BinaryExponent FloatingSuffix?
+    |   ('u'|'U'|'L')? '\'' CChar+ '\''
+    |   ('u8'|'u'|'U'|'L')? '"' SChar* '"'
+    ;
+fragment Digit: [0-9] ;
+fragment HexadecimalPrefix: '0' [xX] ;
+fragment OctalDigit: [0-7] ;
+fragment HexadecimalDigit: [0-9a-fA-F] ;
+fragment IntegerSuffix
+    :   [uU] [lL]?
+    |   [uU] ('ll' | 'LL')
+    |   [lL] [uU]?
+    |   ('ll' | 'LL') [uU]?
+    ;
+fragment Fraction
+    :   Digit+? '.' Digit+
+    |   Digit+ '.'
+    ;
+fragment Exponent: [eE] [-+]? Digit+;
+fragment HexadecimalFraction
+    :   HexadecimalDigit* '.' HexadecimalDigit+
+    |   HexadecimalDigit+ '.'
+    ;
+fragment BinaryExponent: [pP] [-+] Digit+ ;
+fragment FloatingSuffix: [flFL] ;
+fragment CChar
+    :   ~['\\\r\n]
+    |   EscapeSequence
+    ;
+fragment SChar
+    :   ~["\\\r\n]
+    |   EscapeSequence
+    |   '\\\n'
+    |   '\\\r\n'
+    ;
+fragment EscapeSequence
+    :   '\\' ['"?abfnrtv\\]
+    |   '\\' OctalDigit (OctalDigit OctalDigit?)?
+    |   '\\x' HexadecimalDigit+
+    |   UniversalCharacterName
+    ;
+fragment UniversalCharacterName: '\\u' HexQuad | '\\U' HexQuad HexQuad ;
+fragment HexQuad: HexadecimalDigit HexadecimalDigit HexadecimalDigit HexadecimalDigit ;
+
+Preprocessor: '#' ('\\\n'|~[\r\n])* ;
+
+Whitespace: [ \t]+ -> skip ;
+Newline: ('\r\n' | '\n') ;
+
+Comment: '/*' .*? '*/'
+    | '//' ~[\r\n]* ;
+    
+OTHER: . ;
+
+highlightScan
+    : (keyword|typename|identifier|literal|preprocessor|comment|asmBlock|.)* EOF ;
+// keywords can't be defined in the lexer if they are also used as quoted strings in parser rules
+// since all have to fall into one highlight name, the parser rule lists them all
+keyword: 'break'|'case'|'continue'|'default'|'do'|'else'|'for'|'goto'|'if'|'_Pragma'|'return'|'switch'|'while' ;
+typename: 'asm'|'__asm__'|'bool'|'_Bool'|'char'|'_Complex'|'double'|'float'|'_Imaginary'|'int'|'long'|'short'|'signed'|'unsigned'|'void'
+    |   'enum'|'struct'|'typedef'|'union'
+    |   'auto'|'const'|'extern'|'register'|'restrict'|'static'|'volatile'|'inline' ;
+operator_: '<'|'<='|'>'|'>='|'<<'|'>>'
+    |'+'|'++'|'-'|'--'|'*'|'/'|'%'
+    |'&'|'|'|'&&'|'||'|'^'|'!'|'~'
+    |'?'|':'|';'|','
+    |'='|'*='|'/='|'%='|'+='|'-='|'<<='|'>>='|'&='|'^='|'|='
+    |'=='|'!='
+    |'->'|'.'|'...' ;
+identifier: Identifier ;
+literal: Literal ;
+preprocessor: Preprocessor ;
+asmBlock: 'asm' ~'{'* '{' balanced* '}' ;
+comment: Comment ;
+
+definitionScan
+    // https://github.com/antlr/antlr4/blob/4.9.1/doc/wildcard.md#nongreedy-parser-subrules
+    : (definition|balanced)* EOF ;
+
+definition
+    :   Newline (Identifier|typename|'enum'|'struct'|'union')+ '*'* Newline? defined '(' balanced* ')' Newline? '{'  balanced* '}'
+    |   Newline ('enum'|'struct'|'union') defined '{' balanced* '}'
+    |   Newline 'typedef' ('enum'|'struct'|'union') '{' balanced* '}' defined ';'
+    ;
+defined: Identifier ;
+  
+balanced
+    :   '(' balanced* ')'
+    |   '[' balanced* ']'
+    |   '{' balanced* '}'
+    |   ~(')'|']'|'}')
+    ;
+
+/*
+declaration
+    :   declarationSpecifier+ initDeclaratorList ';'
+    |     declarationSpecifier+ ';'
+    |   '_Static_assert' '(' balanced* ')' ';'
+    ;
+declarationSpecifier
+    :   'typedef'
+    |   'extern'
+    |   'static'
+    |   '_Thread_local'
+    |   'auto'
+    |   'register'
+    |   typeSpecifier
+    |   typeQualifier
+    |   'inline'
+    |   '_Noreturn'
+    |   '__inline__' // GCC extension
+    |   '__stdcall'
+    |   gccAttributeSpecifier
+    |   '__declspec' '(' Identifier ')'
+    |   '_Alignas' '(' balanced ')'
+    ;
+initDeclaratorList
+    :   initDeclarator
+    |   initDeclaratorList ',' initDeclarator
+    ;
+initDeclarator
+    :   declarator ('=' initializer)?
+    ;
+typeSpecifier
+    :   'void'
+    |   'char'
+    |   'short'
+    |   'int'
+    |   'long'
+    |   'float'
+    |   'double'
+    |   'signed'
+    |   'unsigned'
+    |   '_Bool'
+    |   '_Complex'
+    |   '__m128'
+    |   '__m128d'
+    |   '__m128i'
+    |   '__extension__' '(' ('__m128' | '__m128d' | '__m128i') ')'
+    |   '_Atomic' '(' typeName ')'
+    |   ('struct' | 'union') ( Identifier? balanced* | Identifier)
+    |   'enum' Identifier? ( '{' balanced* '}' )?
+    |   typedefName
+    |   '__typeof__' '(' constantExpression ')' // GCC extension
+    |   typeSpecifier pointer
+    ;
+typeQualifier
+    :   'const'
+    |   'restrict'
+    |   'volatile'
+    |   '_Atomic'
+    ;
+declarator
+    :   pointer? directDeclarator gccDeclaratorExtension*
+    ;
+directDeclarator
+    :   Identifier
+    |   '(' balanced* ')'
+    |   directDeclarator '[' balanced* ']'
+    |   directDeclarator '(' balanced* ')'
+    |   Identifier ':' DigitSequence  // bit field
+    |   '(' typeSpecifier? pointer directDeclarator ')' // function pointer like: (__cdecl *f)
+    ;
+gccDeclaratorExtension
+    :   '__asm' '(' balanced* ')'
+    |   gccAttributeSpecifier
+    ;
+gccAttributeSpecifier
+    :   '__attribute__' '(' balanced* ')'
+    ;
+pointer
+    :   '*' typeQualifierList?
+    |   '*' typeQualifierList? pointer
+    |   '^' typeQualifierList? // Blocks language extension
+    |   '^' typeQualifierList? pointer // Blocks language extension
+    ;
+typeQualifierList
+    :   typeQualifier
+    |   typeQualifierList typeQualifier
+    ;
+parameterTypeList
+    :   parameterList
+    |   parameterList ',' '...'
+    ;
+parameterList
+    :   parameterDeclaration ( ',' parameterDeclaration )*
+    ;
+parameterDeclaration
+    :   declarationSpecifiers declarator
+    |   declarationSpecifiers2 abstractDeclarator?
+    ;
+typeName
+    :   specifierQualifierList abstractDeclarator?
+    ;
+abstractDeclarator
+    :   pointer
+    |   pointer? directAbstractDeclarator gccDeclaratorExtension*
+    ;
+directAbstractDeclarator
+    :   '(' balanced* ')' gccDeclaratorExtension*
+    |   '[' balanced* ']'
+    |   directAbstractDeclarator '[' balanced* ']'
+    |   directAbstractDeclarator '(' balanced* ')' gccDeclaratorExtension*
+    ;
+typedefName
+    :   Identifier
+    ;
+initializer
+    :   assignmentExpression
+    |   '{' balanced* '}'
+    ;
+compilationUnit
+    :   externalDeclaration* EOF
+externalDeclaration
+    :   functionDefinition
+    |   declaration
+    |   ';' // stray ;
+    ;
+functionDefinition
+    :   declarationSpecifiers? declarator declaration* compoundStatement
+    ;
+*/

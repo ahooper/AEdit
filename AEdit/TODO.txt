@@ -1,0 +1,30 @@
+File Outline:
+    autosave selected item
+    rename
+    drag & drop
+    context menu - open in new window
+    tree find bar
+    highlight active files
+Active Files:
+    context menu
+    only add when edited or double click in outline
+    monitor for changes by other programs
+Preferences:
+    position NSFontManager and NSColorPanel adjacent to Select button
+    show hidden files, package contents
+Symbols:
+    deselect after select action
+
+fatalError stack trace (SIGILL) and NSUncaughtException
+- open document removes unmodified untitled document
+display information for non-viewable files (NSFileManager attributesOfItem dictionary) (Xcode/examples/FileSpy-Final)
+
+RTF editor
+Image view (Xcode/examples/SourceView)
+PDF find, goto
+
+close discard changes seems to loop
+window modification indicator does not go off after undos
+clear window title after last active closed
+
+file-level settings for encoding, tab width, line ending

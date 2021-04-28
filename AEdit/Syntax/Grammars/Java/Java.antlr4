@@ -1,0 +1,78 @@
+// Excerpts from https://github.com/antlr/grammars-v4/blob/master/java/java/JavaLexer.g4
+// antlr4 -no-listener -Dlanguage=Swift Java/Java.antlr4
+// expect warning(131): Java/Java.antlr4:45:53: greedy block ()* contains wildcard; the non-greedy syntax ()*? may be preferred
+
+grammar Java;
+
+Identifier: IdentifierFirst (IdentifierFirst | [0-9])* ;
+fragment IdentifierFirst: [a-zA-Z$_]
+    |   ~[\u0000-\u007F\uD800-\uDBFF] // all characters above 0x7F which are not a surrogate
+    |   [\uD800-\uDBFF] [\uDC00-\uDFFF] // UTF-16 surrogate pairs
+    ;
+Literal
+    :   ('0' | [1-9] (Digits? | '_'+ Digits)) [lL]?
+    |   '0' [xX] HexadecimalDigit ([0-9a-fA-F_]* HexadecimalDigit)? [lL]?
+    |   '0' '_'* [0-7] ([0-7_]* [0-7])? [lL]?
+    |   '0' [bB] [01] ([01_]* [01])? [lL]?
+    |   (Digits '.' Digits? | '.' Digits) Exponent? [fFdD]?
+    |   Digits (Exponent [fFdD]? | [fFdD])
+    |   '0' [xX] (HexadecimalDigits '.'? | HexadecimalDigits? '.' HexadecimalDigits) [pP] [+-]? Digits [fFdD]?
+    |   'true' | 'false'
+    |   '\'' (~['\\\r\n] | EscapeSequence) '\''
+    |   '"' (~["\\\r\n] | EscapeSequence)* '"'
+    |   'null'
+    ;
+fragment Digits: [0-9] ([0-9_]* [0-9])? ;
+fragment HexadecimalDigits: HexadecimalDigit ((HexadecimalDigit | '_')* HexadecimalDigit)? ;
+fragment HexadecimalDigit: [0-9a-fA-F] ;
+fragment Exponent:  [eE] [+-]? Digits ;
+fragment EscapeSequence
+    : '\\' [btnfr"'\\]
+    | '\\' ([0-3]? [0-7])? [0-7]
+    | '\\' 'u'+ HexadecimalDigit HexadecimalDigit HexadecimalDigit HexadecimalDigit
+    ;
+
+Whitespace: [ \t\u000C]+ -> skip ;
+Newline: ('\r\n' | '\n') ;
+
+Comment: '/*' .*? '*/'
+    | '//' ~[\r\n]* ;
+    
+OTHER: . ;
+
+highlightScan
+    : (keyword|typename|identifier|literal|comment|.)* EOF ;
+// keywords can't be defined in the lexer if they are also used as quoted strings in parser rules
+// since all have to fall into one highlight name, the parser rule lists them all
+keyword:   'assert'|'break'|'case'|'catch'|'continue'|'default'|'do'|'else'|'finally'|'for'
+    |'if'|'goto'|'instanceof'|'new'|'return'|'super'|'switch'|'this'|'throw'|'try'|'while';
+typename: 'boolean'|'byte'|'char'|'double'|'float'|'int'|'long'|'short'|'void'
+    |'abstract'|'class'|'const'|'enum'|'extends'|'final'|'implements'|'import'|'interface'
+    |'native'|'package'|'private'|'protected'|'public'|'static'|'strictfp'|'synchronized'
+    |'throws'|'transient'|'volatile';
+operator_:   ';'|','|'.'|':'
+    |'='||'<'|'!'|'~'|'?'|'=='|'<='|'>='|'!='|'&&'|'||'|'++'|'--'
+    |'+'|'-'|'*'|'/'|'&'|'|'|'^'|'%'
+    |'+='|'-='|'*='|'/='|'&='|'|='|'^='|'%='|'<<='|'>>='|'>>>='
+    |'->'|'::'|'@'|'...';
+identifier: Identifier ;
+literal: Literal ;
+comment: Comment ;
+
+definitionScan
+    // https://github.com/antlr/antlr4/blob/4.9.1/doc/wildcard.md#nongreedy-parser-subrules
+    : (definition|balanced)* EOF ;
+
+definition
+    :   Newline (Identifier|typename|'enum'|'struct'|'union')+ '*'* Newline? defined '(' balanced* ')' '{'  balanced* '}'
+    |   Newline ('enum'|'struct'|'union') defined '{' balanced* '}'
+    |   Newline 'typedef' ('enum'|'struct'|'union') '{' balanced* '}' defined ';'
+    ;
+defined: Identifier ;
+  
+balanced
+    :   '(' balanced* ')'
+    |   '[' balanced* ']'
+    |   '{' balanced* '}'
+    |   ~(')'|']'|'}')
+    ;

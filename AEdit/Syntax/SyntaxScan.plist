@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<array>
+	<dict>
+		<key>syntaxName</key>
+		<string>C</string>
+		<key>documentContentTypeIdentifiers</key>
+		<array>
+			<string>public.c-source</string>
+			<string>public.c-header</string>
+		</array>
+		<key>fileNameExtensions</key>
+		<array>
+			<string>c</string>
+			<string>h</string>
+		</array>
+		<key>grammarName</key>
+		<string>C</string>
+	</dict>
+	<dict>
+		<key>syntaxName</key>
+		<string>Swift</string>
+		<key>documentContentTypeIdentifiers</key>
+		<array>
+			<string>public.swift-source</string>
+		</array>
+		<key>fileNameExtensions</key>
+		<array>
+			<string>swift</string>
+		</array>
+		<key>grammarName</key>
+		<string>Swift</string>
+	</dict>
+	<dict>
+		<key>syntaxName</key>
+		<string>Jave</string>
+		<key>documentContentTypeIdentifiers</key>
+		<array>
+			<string>com.sun.java-source</string>
+		</array>
+		<key>fileNameExtensions</key>
+		<array>
+			<string>java</string>
+		</array>
+		<key>grammarName</key>
+		<string>Java</string>
+	</dict>
+</array>
+</plist>

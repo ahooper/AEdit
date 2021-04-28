@@ -1,0 +1,14 @@
+// https://macromates.com/manual/en/appendix#property-list-format
+// antlr4 -Dlanguage=Swift -no-listener -visitor TextMatePList.antlr4
+grammar TextMatePList;
+
+input: value* EOF ;
+array: '(' element ( ',' element )* ','? ')' ;
+element: array | String ;
+dictionary: '{' String '=' value ';' '}' ;
+value: element | dictionary ;
+
+SQString: '\'' (~['] | '\'\'')* '\'' ;
+DQString: '"' (~["\\] | '\\\\'|'\\"')* '"' ;
+UQString: [-_A-Za-z0-9]+ ;
+String: SQString | DQString | UQString ;
